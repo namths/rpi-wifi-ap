@@ -1,37 +1,126 @@
-## Welcome to GitHub Pages
+# Raspberry Pi Wifi-AP
+Transform your PI into a Wireless Router (DHCP and WPA2 already insisde)
 
-You can use the [editor on GitHub](https://github.com/namthz/rpi-wifi-ap/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+Checkout my `Docker Hub`: [`https://hub.docker.com/r/namthz/rpi-wifi-ap`](https://hub.docker.com/r/namthz/rpi-wifi-ap)
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+# Docker container stack: hostap + dhcp server = wifi-ap
 
-### Markdown
+Designed to work on **Raspberry Pi** (arm) using as base image alpine Linux (very little size).
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+# Idea
 
-```markdown
-Syntax highlighted code block
+Since my last change on ISP, they put a cable modem with a horrible Wireless, it drops lots of packets, and I didn't want to put an extra AP or wireless router.
 
-# Header 1
-## Header 2
-### Header 3
+Most of the time use wireless devices on same room so I decided to try to convert my current Pi on a small Access Point using a small USB dongle.
 
-- Bulleted
-- List
 
-1. Numbered
-2. List
+# Requirements
 
-**Bold** and _Italic_ and `Code` text
+On the host system, the ralink firmware (in my case) should be installed so you can use it on AP mode.
 
-[Link](url) and ![Image](src)
+On debian/raspbian 32bit armhf and Ubuntu Core 20.04 arm64:
+
+```
+apt-get install firmware-ralink
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+Make sure your USB support AP mode:
 
-### Jekyll Themes
+```
+# iw list
+...
+        Supported interface modes:
+                 * IBSS
+                 * managed
+                 * AP
+                 * AP/VLAN
+                 * WDS
+                 * monitor
+                 * mesh point
+...
+```
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/namthz/rpi-wifi-ap/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+Set country regulations, for example, to Spain set:
 
-### Support or Contact
+```
+# iw reg set ES
+country ES: DFS-ETSI
+        (2400 - 2483 @ 40), (N/A, 20), (N/A)
+        (5150 - 5250 @ 80), (N/A, 23), (N/A), NO-OUTDOOR
+        (5250 - 5350 @ 80), (N/A, 20), (0 ms), NO-OUTDOOR, DFS
+        (5470 - 5725 @ 160), (N/A, 26), (0 ms), DFS
+        (57000 - 66000 @ 2160), (N/A, 40), (N/A)
+```
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+# Build / run
+
+I've already uploaded the image to docker hubs, so you can run it from there like this: [`namthz/rpi-wifi-ap:latest`](https://hub.docker.com/r/namthz/rpi-wifi-ap) 
+
+```
+sudo docker run -d -t \
+  -e INTERFACE=wlan0 \
+  -e CHANNEL=6 \
+  -e SSID=PI \
+  -e AP_ADDR=192.168.254.1 \
+  -e SUBNET=192.168.254.0 \
+  -e WPA_PASSPHRASE=12345678 \
+  -e OUTGOINGS=eth0 \
+  --privileged \
+  --net host \
+  namthz/rpi-wifi-ap:latest
+```
+
+Docker-compose file: docker-compose.yml
+
+```
+version: '3.0'
+services:
+  rpi-wifi-ap:
+    container_name: wifi-ap
+    hostname: wifi-ap
+    image: namthz/rpi-wifi-ap:latest
+    network_mode: host
+    privileged: true
+    restart: always
+    environment:
+      INTERFACE: wlan0
+      CHANNEL: 6
+      SSID: PI
+      AP_ADDR: 192.168.254.1
+      SUBNET: 192.168.254.0
+      WPA_PASSPHRASE: 12345678
+      OUTGOINGS: eth0
+```
+
+But before this, hostap usually requires that wlan0 interface to be already up, so before `docker run` take the interface up:
+
+```
+/sbin/ifconfig wlan0 192.168.254.1/24 up
+```
+
+Also you should have a driver to enable hostap on your USB wifi (if you are using Pi 3 integrated WiFI you won't need this).
+
+```
+apt-get install firmware-ralink
+```
+
+
+Make sure you are not runing `wpa_supplicant` on your host machine or docker container will tell messages like `wlan0: Could not connect to kernel driver`.
+
+```
+# ps uaxf |grep wpa_supplicant
+root     22619  0.0  0.4   6616  3700 ?        Ss   22:04   0:00 /sbin/wpa_supplicant -s -B -P /run/wpa_supplicant.wlan0.pid -i wlan0 -D nl80211,wext -C /run/wpa_supplicant
+```
+
+## Environment Variables
+
+| Name            | Required | Description                    | Default Value |
+|:---------------:|:--------:|:------------------------------:|:-------------:|
+| INTERFACE       | true     | The wireless interface         |               |
+| CHANNEL         | false    | WiFi Channel to use            | 6             |
+| SSID            | false    | WiFi Name                      | PI            |
+| AP\_ADDR        | false    | Access Point IP Address        | 192.168.254.1 |
+| SUBNET          | false    | WiFi network subnet            | 192.168.254.0 |
+| WPA\_PASSPHRASE | false    | WiFi Password                  | 12345678      |
+| OUTGOINGS       | false    | Interfaces to external traffic |               |
+| HW\_MODE        | false    | Hardware protocol              | g             |
