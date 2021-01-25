@@ -1,7 +1,7 @@
 # Raspberry Pi Wifi-AP
 Transform your PI into a Wireless Router (DHCP and WPA2 already insisde)
 
-Checkout my `Docker Hub`: [`https://hub.docker.com/r/namthz/rpi-wifi-ap`](https://hub.docker.com/r/namthz/rpi-wifi-ap)
+Checkout my `Docker Hub`: [`https://hub.docker.com/r/namths/rpi-wifi-ap`](https://hub.docker.com/r/namths/rpi-wifi-ap)
 
 # Docker container stack: hostap + dhcp server = wifi-ap
 
@@ -54,7 +54,7 @@ country ES: DFS-ETSI
 
 # Build / run
 
-I've already uploaded the image to docker hubs, so you can run it from there like this: [`namthz/rpi-wifi-ap:latest`](https://hub.docker.com/r/namthz/rpi-wifi-ap) 
+I've already uploaded the image to docker hubs, so you can run it from there like this: [`namths/rpi-wifi-ap:latest`](https://hub.docker.com/r/namths/rpi-wifi-ap) 
 
 ```
 sudo docker run -d -t \
@@ -67,7 +67,7 @@ sudo docker run -d -t \
   -e OUTGOINGS=eth0 \
   --privileged \
   --net host \
-  namthz/rpi-wifi-ap:latest
+  namths/rpi-wifi-ap:latest
 ```
 
 Docker-compose file: docker-compose.yml
@@ -78,7 +78,7 @@ services:
   rpi-wifi-ap:
     container_name: wifi-ap
     hostname: wifi-ap
-    image: namthz/rpi-wifi-ap:latest
+    image: namths/rpi-wifi-ap:latest
     network_mode: host
     privileged: true
     restart: always

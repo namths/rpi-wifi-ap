@@ -1,6 +1,6 @@
 FROM jonaskello/rpi-alpine-scratch-qemu
 
-MAINTAINER namthz <namth.dev@gmail.com>
+MAINTAINER namths <namths@outlook.com>
 
 RUN apk update && apk add bash hostapd iptables dhcp && rm -rf /var/cache/apk/*
 RUN echo "" > /var/lib/dhcp/dhcpd.leases

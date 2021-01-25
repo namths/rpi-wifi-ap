@@ -3,7 +3,7 @@ services:
   rpi-wifi-ap:
     container_name: wifi-ap
     hostname: wifi-ap
-    image: namthz/rpi-wifi-ap:latest
+    image: namths/rpi-wifi-ap:latest
     network_mode: host
     privileged: true
     restart: always
@@ -13,5 +13,5 @@ services:
       SSID: PI
       AP_ADDR: 192.168.254.1
       SUBNET: 192.168.254.0
-      WPA_PASSPHRASE: Raspberry@123
+      WPA_PASSPHRASE: 12345678
       OUTGOINGS: eth0
